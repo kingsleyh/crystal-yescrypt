@@ -197,6 +197,7 @@ module Yescrypt
   def self.pbkdf2_sha256(password, salt, iters, dkLen)
     # sha256 = OpenSSL::Digest::SHA256.new
     # return OpenSSL::PKCS5.pbkdf2_hmac(password, salt, iters, dkLen, sha256)
+    # TODO - kings - really want pbkdf2_hmac_sha256 
     return OpenSSL::PKCS5.pbkdf2_hmac_sha1(password, salt, iters, dkLen)
   end
 
