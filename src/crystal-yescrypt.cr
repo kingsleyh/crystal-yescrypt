@@ -136,8 +136,10 @@ module Yescrypt
       password = self.hmac_sha256(password, key)
     end
 
+    # bytes = self.pbkdf2_sha256(password, salt, 1, p * 128 * r)
+    # b = bytes.unpack("V*")
+    b = self.pbkdf2_sha256(password, salt, 1, p * 128 * r)
     bytes = self.pbkdf2_sha256(password, salt, 1, p * 128 * r)
-    b = bytes.unpack("V*")
 
     if flags != 0
       password = bytes[0, 32]
@@ -157,7 +159,8 @@ module Yescrypt
       end
     end
 
-    new_salt = b.pack("V*")
+    # new_salt = b.pack("V*")
+    new_salt = String.new(b)
 
     # Make sure we get at least 32 bytes.
     result = self.pbkdf2_sha256(password, new_salt, 1, [dkLen, 32].max)
@@ -197,7 +200,7 @@ module Yescrypt
   def self.pbkdf2_sha256(password, salt, iters, dkLen)
     # sha256 = OpenSSL::Digest::SHA256.new
     # return OpenSSL::PKCS5.pbkdf2_hmac(password, salt, iters, dkLen, sha256)
-    # TODO - kings - really want pbkdf2_hmac_sha256 
+    # TODO - kings - really want pbkdf2_hmac_sha256
     return OpenSSL::PKCS5.pbkdf2_hmac_sha1(password, salt, iters, dkLen)
   end
 
@@ -248,11 +251,12 @@ module Yescrypt
 
   def self.sMix(n, r, t, p, pbkdf2_blocks, flags, sha256)
 
-    if !n.is_a?(Integer) || n <= 1 ||
-       !r.is_a?(Integer) || r <= 0 ||
-       !t.is_a?(Integer) || t <  0 ||
-       !p.is_a?(Integer) || p <= 0 ||
-       !pbkdf2_blocks.is_a?(Array) || pbkdf2_blocks.count != p * 2 * r * 16
+    if !n.is_a?(UInt64) || n <= 1 ||
+       !r.is_a?(UInt32) || r <= 0 ||
+       !t.is_a?(UInt32) || t <  0 ||
+       !p.is_a?(UInt32) || p <= 0 ||
+       # !pbkdf2_blocks.is_a?(Array) || pbkdf2_blocks.count != p * 2 * r * 16
+       !pbkdf2_blocks.is_a?(Array) || pbkdf2_blocks.size != p * 2 * r * 16
       raise ArgumentError.new("Bad arguments to sMix.")
     end
 
@@ -278,7 +282,8 @@ module Yescrypt
     # Ordinarily, we'd have to check nloop_all for overflow, but Ruby does
     # automatic Bignums.
 
-    v = Array.new(n * 2 * r * 16)
+    # v = Array.new(n * 2 * r * 16)
+    v = Array(UInt64).new((n * 2 * r * 16).to_u64)
 
     0.upto(p - 1) do |i|
       little_v = i * little_n
